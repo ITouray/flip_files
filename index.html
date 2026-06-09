@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FlipTrack">
+<meta name="theme-color" content="#0e0f11">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>FlipTrack</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0e0f11;
+  --bg2: #16181c;
+  --bg3: #1e2026;
+  --bg4: #26292f;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #f0f1f3;
+  --muted: #7a7f8a;
+  --accent: #e8f542;
+  --accent2: #c8d93a;
+  --green: #4ade80;
+  --red: #f87171;
+  --blue: #60a5fa;
+  --mono: 'DM Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  /* full screen including notch areas */
+  padding-top: var(--safe-top);
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px;
+  height: 56px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+.logo { font-family: var(--mono); font-size: 16px; font-weight: 500; color: var(--accent); letter-spacing: 0.05em; }
+.logo span { color: var(--muted); }
+.topbar-title { font-size: 16px; font-weight: 500; color: var(--text); }
+.fab {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--accent); border: none; color: #000;
+  font-size: 22px; font-weight: 300; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+}
+
+/* ── SCROLL CONTENT ── */
+.content {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 16px 0;
+}
+
+/* ── BOTTOM TAB BAR ── */
+.tabbar {
+  display: flex;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  padding-bottom: var(--safe-bottom);
+  flex-shrink: 0;
+}
+.tab-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; padding: 10px 0; border: none; background: transparent;
+  color: var(--muted); cursor: pointer; transition: color 0.15s;
+  font-family: var(--sans); font-size: 10px; font-weight: 500; letter-spacing: 0.03em;
+}
+.tab-btn.active { color: var(--accent); }
+.tab-icon { font-size: 22px; line-height: 1; }
+
+/* ── STATS GRID ── */
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.stat {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px 16px;
+}
+.stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+.stat-val { font-family: var(--mono); font-size: 20px; font-weight: 500; }
+.green { color: var(--green); }
+.red { color: var(--red); }
+.yellow { color: var(--accent); }
+
+/* ── FILTER CHIPS ── */
+.chips { display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  flex-shrink: 0; padding: 6px 14px; border-radius: 20px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); font-family: var(--sans); font-size: 13px; cursor: pointer;
+}
+.chip.active { border-color: var(--accent); color: var(--accent); background: rgba(232,245,66,0.08); }
+
+/* ── SEARCH ── */
+.search-bar {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 0 12px; margin-bottom: 14px;
+}
+.search-bar input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--text); font-family: var(--sans); font-size: 14px; padding: 10px 0;
+}
+.search-bar input::placeholder { color: var(--muted); }
+.search-icon { color: var(--muted); font-size: 16px; flex-shrink: 0; }
+
+/* ── ITEM CARDS ── */
+.items-list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 20px; }
+.item-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px;
+  display: flex; gap: 12px; align-items: center;
+  cursor: pointer; transition: background 0.1s; active-scale: 0.98;
+}
+.item-card:active { background: var(--bg3); }
+.thumb {
+  width: 48px; height: 48px; border-radius: 10px; flex-shrink: 0;
+  background: var(--bg3); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; overflow: hidden;
+}
+.thumb img { width: 100%; height: 100%; object-fit: cover; }
+.item-info { flex: 1; min-width: 0; }
+.item-name { font-weight: 500; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.item-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.item-right { text-align: right; flex-shrink: 0; }
+.badge {
+  display: inline-block; padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 500;
+}
+.badge-avail { background: rgba(74,222,128,0.1); color: var(--green); border: 1px solid rgba(74,222,128,0.25); }
+.badge-sold  { background: rgba(96,165,250,0.1);  color: var(--blue);  border: 1px solid rgba(96,165,250,0.25); }
+.profit-val { font-family: var(--mono); font-size: 13px; margin-top: 4px; }
+
+/* ── EMPTY STATE ── */
+.empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty p { font-size: 14px; }
+
+/* ── SHEET MODAL (slides up from bottom) ── */
+.sheet-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  z-index: 300; opacity: 0; pointer-events: none; transition: opacity 0.25s;
+}
+.sheet-overlay.open { opacity: 1; pointer-events: all; }
+.sheet {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: var(--bg2);
+  border-radius: 20px 20px 0 0;
+  border-top: 1px solid var(--border2);
+  max-height: 92vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 20px calc(20px + var(--safe-bottom));
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.sheet-overlay.open .sheet { transform: translateY(0); }
+.sheet-handle {
+  width: 36px; height: 4px; border-radius: 2px;
+  background: var(--border2); margin: 12px auto 20px;
+}
+.sheet-title {
+  font-size: 17px; font-weight: 600; margin-bottom: 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.close-btn {
+  width: 30px; height: 30px; border-radius: 8px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── FORM ── */
+.form-group { margin-bottom: 16px; }
+.form-group label {
+  display: block; font-size: 11px; color: var(--muted);
+  font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 7px;
+}
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border);
+  color: var(--text); font-family: var(--sans); font-size: 16px;
+  padding: 12px 14px; border-radius: 10px; outline: none;
+  transition: border-color 0.15s; appearance: none; -webkit-appearance: none;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--border2); }
+.form-group select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a7f8a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+.form-group select option { background: #1e2026; }
+.form-group textarea { min-height: 80px; resize: none; font-size: 15px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* photo upload */
+.photo-zone {
+  border: 1px dashed var(--border2); border-radius: 10px;
+  padding: 18px; text-align: center; cursor: pointer;
+  color: var(--muted); font-size: 13px;
+}
+.photo-zone input { display: none; }
+.photo-preview-row { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
+.photo-preview-row img { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); }
+.remove-photo { font-size: 12px; color: var(--muted); background: var(--bg3); border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; cursor: pointer; margin-left: auto; }
+
+/* buttons */
+.btn-primary {
+  width: 100%; padding: 15px; border-radius: 12px;
+  background: var(--accent); color: #000;
+  font-family: var(--sans); font-size: 15px; font-weight: 600;
+  border: none; cursor: pointer; margin-top: 8px;
+}
+.btn-secondary {
+  width: 100%; padding: 14px; border-radius: 12px;
+  background: transparent; color: var(--muted);
+  font-family: var(--sans); font-size: 15px;
+  border: 1px solid var(--border); cursor: pointer; margin-top: 8px;
+}
+.btn-danger {
+  width: 100%; padding: 14px; border-radius: 12px;
+  background: rgba(248,113,113,0.1); color: var(--red);
+  font-family: var(--sans); font-size: 15px;
+  border: 1px solid rgba(248,113,113,0.2); cursor: pointer; margin-top: 8px;
+}
+
+/* ── DETAIL SHEET ── */
+.detail-photo {
+  width: 100%; height: 200px; border-radius: 12px;
+  object-fit: cover; border: 1px solid var(--border);
+  margin-bottom: 16px; display: block;
+}
+.detail-photo-placeholder {
+  width: 100%; height: 140px; border-radius: 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 48px; margin-bottom: 16px;
+}
+.detail-name { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+.detail-meta { font-size: 13px; color: var(--muted); margin-bottom: 16px; display: flex; gap: 8px; align-items: center; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.detail-field { background: var(--bg3); border-radius: 10px; padding: 12px 14px; }
+.detail-field-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.detail-field-val { font-family: var(--mono); font-size: 15px; font-weight: 500; }
+.profit-card {
+  border-radius: 10px; padding: 12px 14px;
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px;
+}
+.profit-card.pos { background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2); }
+.profit-card.neg { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); }
+.notes-box { background: var(--bg3); border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; font-size: 14px; line-height: 1.6; color: var(--text); }
+.notes-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+/* ── SELL SHEET ── */
+.sell-preview {
+  background: var(--bg3); border-radius: 10px; padding: 14px 16px;
+  margin: 16px 0; border-left: 3px solid var(--accent);
+}
+.sell-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
+.sell-row:last-child { margin-bottom: 0; border-top: 1px solid var(--border); padding-top: 10px; font-size: 16px; font-weight: 500; }
+.sell-row span:first-child { color: var(--muted); }
+
+/* ── ANALYTICS ── */
+.chart-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+.chart-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+.cat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-bottom: 20px; }
+.cat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+.cat-dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; margin-right: 6px; }
+.cat-name-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.cat-profit { font-family: var(--mono); font-size: 18px; font-weight: 500; margin-bottom: 2px; }
+.cat-sub { font-size: 11px; color: var(--muted); }
+
+/* ── INSTALL BANNER ── */
+.install-banner {
+  margin-bottom: 14px; background: rgba(232,245,66,0.07);
+  border: 1px solid rgba(232,245,66,0.2); border-radius: 12px;
+  padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start;
+}
+.install-banner p { font-size: 12px; line-height: 1.5; color: var(--text); flex: 1; }
+.install-banner strong { color: var(--accent); }
+.install-close { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; padding: 0; flex-shrink: 0; line-height: 1; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">flip<span>track</span></div>
+  <div class="topbar-title" id="topbar-title"></div>
+  <button class="fab" id="fab-btn" onclick="openAdd()" aria-label="Add item">+</button>
+</div>
+
+<!-- SCROLLABLE CONTENT -->
+<div class="content" id="content"></div>
+
+<!-- BOTTOM TAB BAR -->
+<div class="tabbar">
+  <button class="tab-btn active" id="tab-inv" onclick="switchTab('inventory',this)">
+    <span class="tab-icon">📦</span>Inventory
+  </button>
+  <button class="tab-btn" id="tab-ana" onclick="switchTab('analytics',this)">
+    <span class="tab-icon">📊</span>Analytics
+  </button>
+</div>
+
+<!-- ADD/EDIT SHEET -->
+<div class="sheet-overlay" id="add-sheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">
+      <span id="add-title">Add Item</span>
+      <button class="close-btn" onclick="closeSheet('add-sheet')">✕</button>
+    </div>
+    <div class="form-group">
+      <label>Item Name *</label>
+      <input type="text" id="f-name" placeholder="e.g. iPhone 14 Pro">
+    </div>
+    <div class="form-group">
+      <label>Category</label>
+      <select id="f-cat">
+        <option>Electronics</option><option>Audio</option><option>Gaming</option>
+        <option>Phones</option><option>Computers</option><option>Cameras</option>
+        <option>Accessories</option><option>Cars</option><option>Furniture</option><option>Other</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Buy Price ($) *</label>
+        <input type="number" id="f-buy" min="0" step="0.01" placeholder="0.00" inputmode="decimal">
+      </div>
+      <div class="form-group">
+        <label>Purchase Date</label>
+        <input type="date" id="f-pdate">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea id="f-notes" placeholder="Condition, specs, source…"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Photo</label>
+      <label class="photo-zone" for="f-photo">
+        📷 Tap to upload or take photo
+        <input type="file" id="f-photo" accept="image/*" capture="environment" onchange="handlePhoto(this)">
+      </label>
+      <div class="photo-preview-row" id="photo-preview" style="display:none">
+        <img id="photo-preview-img" alt="preview">
+        <span style="font-size:13px;color:var(--muted)">Photo added</span>
+        <button class="remove-photo" onclick="clearPhoto()">Remove</button>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="saveItem()" id="save-btn">Add Item</button>
+    <button class="btn-secondary" onclick="closeSheet('add-sheet')">Cancel</button>
+  </div>
+</div>
+
+<!-- DETAIL SHEET -->
+<div class="sheet-overlay" id="detail-sheet">
+  <div class="sheet" id="detail-content"></div>
+</div>
+
+<!-- SELL SHEET -->
+<div class="sheet-overlay" id="sell-sheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">
+      <span>Mark as Sold</span>
+      <button class="close-btn" onclick="closeSheet('sell-sheet')">✕</button>
+    </div>
+    <div class="form-group">
+      <label>Sale Price ($) *</label>
+      <input type="number" id="sell-price" min="0" step="0.01" placeholder="0.00" inputmode="decimal" oninput="updateSellPreview()">
+    </div>
+    <div class="form-group">
+      <label>Sale Date</label>
+      <input type="date" id="sell-date">
+    </div>
+    <div class="sell-preview" id="sell-preview">
+      <div class="sell-row"><span>Bought for</span><span id="sp-buy">—</span></div>
+      <div class="sell-row"><span>Selling for</span><span id="sp-sale">—</span></div>
+      <div class="sell-row"><span>Net Profit</span><span id="sp-profit" style="font-family:var(--mono)">—</span></div>
+    </div>
+    <button class="btn-primary" onclick="confirmSell()">Confirm Sale ✓</button>
+    <button class="btn-secondary" onclick="closeSheet('sell-sheet')">Cancel</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ── DATA ──
+const CATS = ["Electronics","Audio","Gaming","Phones","Computers","Cameras","Accessories","Cars","Furniture","Other"];
+const COLORS = ["#e8f542","#4ade80","#60a5fa","#f472b6","#fb923c","#a78bfa","#34d399","#f87171","#38bdf8","#94a3b8"];
+const EMOJI = {Electronics:"🔌",Audio:"🎧",Gaming:"🎮",Phones:"📱",Computers:"💻",Cameras:"📷",Accessories:"🔋",Cars:"🚗",Furniture:"🪑",Other:"📦"};
+
+let items = JSON.parse(localStorage.getItem("ft_pwa_v1") || "[]");
+let editId = null, sellId = null, photoData = "";
+let currentFilter = "all", searchQ = "";
+let currentTab = "inventory";
+let chartInst = {};
+
+function save() { localStorage.setItem("ft_pwa_v1", JSON.stringify(items)); }
+function fc(v) { if(v===""||v===null||v===undefined||isNaN(+v)) return "—"; return "$"+(+v).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fd(s) { if(!s) return "—"; const d=new Date(s+"T00:00:00"); return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}); }
+function esc(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+// ── RENDER ──
+function render() {
+  if (currentTab === "inventory") renderInventory();
+  else renderAnalytics();
+}
+
+function renderInventory() {
+  document.getElementById("topbar-title").textContent = "";
+  document.getElementById("fab-btn").style.display = "";
+  const sold = items.filter(i=>i.status==="sold");
+  const avail = items.filter(i=>i.status==="available");
+  const profit = sold.reduce((s,i)=>s+((i.salePrice||0)-i.buyPrice),0);
+  const invested = items.reduce((s,i)=>s+i.buyPrice,0);
+  const pc = profit>=0?"green":"red";
+
+  let list = items;
+  if (currentFilter !== "all") list = list.filter(i=>i.status===currentFilter);
+  if (searchQ) list = list.filter(i=>i.name.toLowerCase().includes(searchQ)||i.category.toLowerCase().includes(searchQ));
+
+  const showBanner = !localStorage.getItem("ft_banner_dismissed") && !window.matchMedia("(display-mode: standalone)").matches;
+
+  document.getElementById("content").innerHTML = `
+    ${showBanner ? `<div class="install-banner" id="install-banner">
+      <p>📲 <strong>Add to Home Screen:</strong> tap the Share button in Safari, then "Add to Home Screen" to install FlipTrack as an app.</p>
+      <button class="install-close" onclick="dismissBanner()">✕</button>
+    </div>` : ""}
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Invested</div><div class="stat-val" style="font-size:17px">${fc(invested)}</div></div>
+      <div class="stat"><div class="stat-label">Net Profit</div><div class="stat-val ${pc}" style="font-size:17px">${profit>=0?"+":""}${fc(profit)}</div></div>
+      <div class="stat"><div class="stat-label">Available</div><div class="stat-val yellow">${avail.length}</div></div>
+      <div class="stat"><div class="stat-label">Sold</div><div class="stat-val">${sold.length}</div></div>
+    </div>
+    <div class="search-bar">
+      <span class="search-icon">⌕</span>
+      <input type="search" placeholder="Search items…" value="${esc(searchQ)}" oninput="searchItems(this.value)" autocomplete="off">
+    </div>
+    <div class="chips">
+      <button class="chip ${currentFilter==='all'?'active':''}" onclick="setFilter('all',this)">All (${items.length})</button>
+      <button class="chip ${currentFilter==='available'?'active':''}" onclick="setFilter('available',this)">Available (${avail.length})</button>
+      <button class="chip ${currentFilter==='sold'?'active':''}" onclick="setFilter('sold',this)">Sold (${sold.length})</button>
+    </div>
+    ${list.length === 0
+      ? `<div class="empty"><div class="empty-icon">📦</div><p>${items.length===0?"No items yet. Tap + to add your first.":"No items match."}</p></div>`
+      : `<div class="items-list">${list.map(item => {
+          const profit = item.status==="sold" ? (item.salePrice||0)-item.buyPrice : null;
+          return `<div class="item-card" onclick="openDetail('${item.id}')">
+            <div class="thumb">${item.picture?`<img src="${item.picture}" alt="">`:EMOJI[item.category]||"📦"}</div>
+            <div class="item-info">
+              <div class="item-name">${esc(item.name)}</div>
+              <div class="item-sub">${item.category} · ${fc(item.buyPrice)}</div>
+            </div>
+            <div class="item-right">
+              <span class="badge ${item.status==="available"?"badge-avail":"badge-sold"}">${item.status==="available"?"Available":"Sold"}</span>
+              ${profit!==null?`<div class="profit-val" style="color:${profit>=0?"var(--green)":"var(--red)"}">${profit>=0?"+":""}${fc(profit)}</div>`:""}
+            </div>
+          </div>`;
+        }).join("")}</div>`
+    }
+  `;
+}
+
+function renderAnalytics() {
+  document.getElementById("topbar-title").textContent = "";
+  document.getElementById("fab-btn").style.display = "none";
+
+  const catData = CATS.map((cat,i) => {
+    const ci = items.filter(it=>it.category===cat);
+    const s = ci.filter(it=>it.status==="sold");
+    return { name:cat, profit:parseFloat(s.reduce((sum,it)=>sum+((it.salePrice||0)-it.buyPrice),0).toFixed(2)), count:ci.length, soldCount:s.length, color:COLORS[i] };
+  }).filter(d=>d.count>0);
+
+  document.getElementById("content").innerHTML = catData.length===0
+    ? `<div class="empty"><div class="empty-icon">📊</div><p>Add items to see analytics.</p></div>`
+    : `<div class="chart-card">
+        <div class="chart-title">Profit by Category</div>
+        <div style="position:relative;height:220px"><canvas id="profitChart" role="img" aria-label="Profit by category"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Volume — Total vs Sold</div>
+        <div style="position:relative;height:180px"><canvas id="volChart" role="img" aria-label="Volume by category"></canvas></div>
+      </div>
+      <div class="cat-cards">
+        ${[...catData].sort((a,b)=>b.profit-a.profit).map(d=>`
+          <div class="cat-card">
+            <div class="cat-name-label"><span class="cat-dot" style="background:${d.color}"></span>${d.name}</div>
+            <div class="cat-profit ${d.profit>=0?"green":"red"}">${d.profit>=0?"+":""}${fc(d.profit)}</div>
+            <div class="cat-sub">${d.soldCount}/${d.count} sold</div>
+          </div>`).join("")}
+      </div>`;
+
+  if (catData.length) requestAnimationFrame(() => {
+    ["profitChart","volChart"].forEach(id => { if(chartInst[id]) { chartInst[id].destroy(); delete chartInst[id]; }});
+    const pc = document.getElementById("profitChart");
+    if (pc) chartInst.profitChart = new Chart(pc,{type:"bar",data:{labels:catData.map(d=>d.name),datasets:[{data:catData.map(d=>d.profit),backgroundColor:catData.map(d=>d.color+"44"),borderColor:catData.map(d=>d.color),borderWidth:1.5,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>"$"+v,color:"#7a7f8a",font:{size:10}},grid:{color:"rgba(255,255,255,0.05)"},border:{color:"transparent"}},x:{ticks:{color:"#7a7f8a",font:{size:10}},grid:{display:false},border:{color:"transparent"}}}}});
+    const vc = document.getElementById("volChart");
+    if (vc) chartInst.volChart = new Chart(vc,{type:"bar",data:{labels:catData.map(d=>d.name),datasets:[{data:catData.map(d=>d.count),backgroundColor:"rgba(255,255,255,0.07)",borderColor:"rgba(255,255,255,0.15)",borderWidth:1,borderRadius:4},{data:catData.map(d=>d.soldCount),backgroundColor:catData.map(d=>d.color+"55"),borderColor:catData.map(d=>d.color),borderWidth:1.5,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{color:"#7a7f8a",font:{size:10}},grid:{color:"rgba(255,255,255,0.05)"},border:{color:"transparent"}},x:{ticks:{color:"#7a7f8a",font:{size:10}},grid:{display:false},border:{color:"transparent"}}}}});
+  });
+}
+
+// ── TABS ──
+function switchTab(tab, el) {
+  currentTab = tab;
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  el.classList.add("active");
+  render();
+}
+
+// ── FILTERS / SEARCH ──
+function setFilter(f) { currentFilter=f; render(); }
+function searchItems(q) { searchQ=q.toLowerCase(); render(); }
+
+// ── SHEETS ──
+function openSheet(id) { document.getElementById(id).classList.add("open"); document.body.style.overflow="hidden"; }
+function closeSheet(id) { document.getElementById(id).classList.remove("open"); document.body.style.overflow=""; }
+
+// close sheet on backdrop tap
+document.querySelectorAll(".sheet-overlay").forEach(el => {
+  el.addEventListener("click", e => { if(e.target===el) { el.classList.remove("open"); document.body.style.overflow=""; } });
+});
+
+// ── ADD / EDIT ──
+function openAdd() {
+  editId=null; photoData="";
+  document.getElementById("add-title").textContent="Add Item";
+  document.getElementById("save-btn").textContent="Add Item";
+  ["f-name","f-buy","f-notes"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("f-cat").value="Electronics";
+  document.getElementById("f-pdate").value="";
+  document.getElementById("photo-preview").style.display="none";
+  openSheet("add-sheet");
+}
+
+function openEdit(id) {
+  const item=items.find(i=>i.id===id); if(!item) return;
+  editId=id; photoData=item.picture||"";
+  document.getElementById("add-title").textContent="Edit Item";
+  document.getElementById("save-btn").textContent="Save Changes";
+  document.getElementById("f-name").value=item.name;
+  document.getElementById("f-cat").value=item.category;
+  document.getElementById("f-buy").value=item.buyPrice;
+  document.getElementById("f-pdate").value=item.purchaseDate||"";
+  document.getElementById("f-notes").value=item.notes||"";
+  const pp=document.getElementById("photo-preview");
+  if(item.picture){document.getElementById("photo-preview-img").src=item.picture;pp.style.display="flex";}else{pp.style.display="none";}
+  closeSheet("detail-sheet");
+  setTimeout(()=>openSheet("add-sheet"),200);
+}
+
+function saveItem() {
+  const name=document.getElementById("f-name").value.trim();
+  const buy=parseFloat(document.getElementById("f-buy").value);
+  if(!name){alert("Item name is required.");return;}
+  if(isNaN(buy)){alert("Valid buy price is required.");return;}
+  const data={name,category:document.getElementById("f-cat").value,buyPrice:buy,purchaseDate:document.getElementById("f-pdate").value,notes:document.getElementById("f-notes").value.trim(),picture:photoData,status:"available"};
+  if(editId){items=items.map(i=>i.id===editId?{...i,...data,status:i.status,salePrice:i.salePrice,saleDate:i.saleDate}:i);}
+  else{items=[{...data,id:Date.now().toString(),addedAt:new Date().toISOString()},...items];}
+  save(); closeSheet("add-sheet"); render();
+}
+
+// ── DETAIL ──
+function openDetail(id) {
+  const item=items.find(i=>i.id===id); if(!item) return;
+  const profit=item.status==="sold"?(item.salePrice||0)-item.buyPrice:null;
+  const roi=item.status==="sold"&&item.buyPrice>0?((profit/item.buyPrice)*100).toFixed(1):null;
+  document.getElementById("detail-content").innerHTML=`
+    <div class="sheet-handle"></div>
+    ${item.picture?`<img src="${item.picture}" class="detail-photo" alt="${esc(item.name)}">`:`<div class="detail-photo-placeholder">${EMOJI[item.category]||"📦"}</div>`}
+    <div class="detail-name">${esc(item.name)}</div>
+    <div class="detail-meta">
+      <span class="badge ${item.status==="available"?"badge-avail":"badge-sold"}">${item.status==="available"?"Available":"Sold"}</span>
+      <span>${item.category}</span>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-field"><div class="detail-field-label">Bought for</div><div class="detail-field-val">${fc(item.buyPrice)}</div></div>
+      <div class="detail-field"><div class="detail-field-label">Sold for</div><div class="detail-field-val">${item.salePrice?fc(item.salePrice):"—"}</div></div>
+      <div class="detail-field"><div class="detail-field-label">Purchase date</div><div class="detail-field-val" style="font-family:var(--sans);font-size:13px">${fd(item.purchaseDate)}</div></div>
+      <div class="detail-field"><div class="detail-field-label">Sale date</div><div class="detail-field-val" style="font-family:var(--sans);font-size:13px">${fd(item.saleDate)}</div></div>
+    </div>
+    ${profit!==null?`<div class="profit-card ${profit>=0?"pos":"neg"}">
+      <div><div style="font-size:11px;color:var(--muted);margin-bottom:2px">Net Profit</div><div style="font-family:var(--mono);font-size:22px;font-weight:500;color:${profit>=0?"var(--green)":"var(--red)"}">${profit>=0?"+":""}${fc(profit)}</div></div>
+      ${roi!==null?`<div style="text-align:right"><div style="font-size:11px;color:var(--muted);margin-bottom:2px">ROI</div><div style="font-family:var(--mono);font-size:22px;font-weight:500;color:${profit>=0?"var(--green)":"var(--red)"}">${roi}%</div></div>`:""}
+    </div>`:""}
+    ${item.notes?`<div class="notes-box"><div class="notes-label">Notes</div>${esc(item.notes)}</div>`:""}
+    <div class="divider"></div>
+    ${item.status==="available"?`<button class="btn-primary" onclick="closeSheet('detail-sheet');setTimeout(()=>openSell('${item.id}'),200)">Mark as Sold 💰</button>`:""}
+    <button class="btn-secondary" onclick="openEdit('${item.id}')">Edit Item</button>
+    <button class="btn-danger" onclick="deleteItem('${item.id}')">Delete Item</button>
+    <div style="height:8px"></div>
+  `;
+  openSheet("detail-sheet");
+}
+
+function deleteItem(id) {
+  if(!confirm("Delete this item?")) return;
+  items=items.filter(i=>i.id!==id);
+  save(); closeSheet("detail-sheet"); render();
+}
+
+// ── SELL ──
+function openSell(id) {
+  sellId=id;
+  const item=items.find(i=>i.id===id);
+  document.getElementById("sell-price").value="";
+  document.getElementById("sell-date").value=new Date().toISOString().slice(0,10);
+  document.getElementById("sp-buy").textContent=fc(item.buyPrice);
+  document.getElementById("sp-sale").textContent="—";
+  document.getElementById("sp-profit").textContent="—";
+  document.getElementById("sp-profit").style.color="";
+  openSheet("sell-sheet");
+}
+
+function updateSellPreview() {
+  const item=items.find(i=>i.id===sellId); if(!item) return;
+  const sp=parseFloat(document.getElementById("sell-price").value);
+  if(isNaN(sp)){document.getElementById("sp-sale").textContent="—";document.getElementById("sp-profit").textContent="—";return;}
+  const p=sp-item.buyPrice;
+  document.getElementById("sp-sale").textContent=fc(sp);
+  const el=document.getElementById("sp-profit");
+  el.textContent=(p>=0?"+":"")+fc(p);
+  el.style.color=p>=0?"var(--green)":"var(--red)";
+}
+
+function confirmSell() {
+  const sp=parseFloat(document.getElementById("sell-price").value);
+  if(isNaN(sp)){alert("Enter a valid sale price.");return;}
+  const sd=document.getElementById("sell-date").value;
+  items=items.map(i=>i.id===sellId?{...i,status:"sold",salePrice:sp,saleDate:sd||new Date().toISOString().slice(0,10)}:i);
+  save(); closeSheet("sell-sheet"); render();
+}
+
+// ── PHOTO ──
+function handlePhoto(input) {
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    photoData=ev.target.result;
+    document.getElementById("photo-preview-img").src=photoData;
+    document.getElementById("photo-preview").style.display="flex";
+  };
+  reader.readAsDataURL(file);
+}
+function clearPhoto(){photoData="";document.getElementById("photo-preview").style.display="none";document.getElementById("f-photo").value="";}
+
+// ── INSTALL BANNER ──
+function dismissBanner(){localStorage.setItem("ft_banner_dismissed","1");document.getElementById("install-banner")?.remove();}
+
+// ── SERVICE WORKER ──
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("./sw.js").catch(()=>{});
+}
+
+// ── INIT ──
+render();
+</script>
+</body>
+</html>

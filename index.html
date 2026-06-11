@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<!-- saved from url=(0046)file:///Users/idatouray/Downloads/index_2.html -->
-<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
+<html lang="en">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="FlipTrack">
 <meta name="theme-color" content="#0e0f11">
-<link rel="manifest" href="file:///Users/idatouray/Downloads/manifest.json">
-<link rel="apple-touch-icon" href="file:///Users/idatouray/Downloads/icon.svg">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
 <title>FlipTrack</title>
-<link href="./FlipTrack_files/css2" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg:#0e0f11;--bg2:#16181c;--bg3:#1e2026;--bg4:#26292f;
@@ -173,10 +173,12 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 <body>
 
 <!-- AUTH SCREEN -->
-<div id="auth-screen" class="auth-screen" style="display: flex;">
+<div id="auth-screen" class="auth-screen" style="display:none;">
   <div class="auth-logo">flip<span>track</span></div>
   <div class="auth-sub">Buy low. Sell high. Track everything.</div>
-  <div class="auth-card">
+
+  <!-- NORMAL LOGIN/SIGNUP CARD -->
+  <div class="auth-card" id="login-card">
     <h2 id="auth-heading">Sign in</h2>
     <div class="auth-group">
       <label>Email</label>
@@ -189,10 +191,30 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
     <div class="auth-err" id="auth-err"></div>
     <button class="btn-auth" id="auth-submit" onclick="authSubmit()">Sign in</button>
     <div class="auth-msg" id="auth-msg"></div>
+    <div class="auth-switch" id="forgot-row" style="margin-bottom:4px;">
+      <button onclick="toggleForgot()">Forgot password?</button>
+    </div>
     <div class="auth-switch">
       <span id="auth-switch-text">Don't have an account?</span>
       <button onclick="toggleAuthMode()">Sign up</button>
     </div>
+  </div>
+
+  <!-- RESET PASSWORD CARD (shown when coming from reset email) -->
+  <div class="auth-card" id="reset-card" style="display:none;">
+    <h2>Set new password</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5;">Choose a new password for your account.</p>
+    <div class="auth-group">
+      <label>New Password</label>
+      <input type="password" id="reset-pw" placeholder="Min 6 characters" autocomplete="new-password">
+    </div>
+    <div class="auth-group">
+      <label>Confirm Password</label>
+      <input type="password" id="reset-pw2" placeholder="Repeat password" autocomplete="new-password">
+    </div>
+    <div class="auth-err" id="reset-err"></div>
+    <button class="btn-auth" id="reset-submit" onclick="submitNewPassword()">Set new password</button>
+    <div class="auth-msg" id="reset-msg"></div>
   </div>
 </div>
 
@@ -207,10 +229,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
   </div>
   <div class="content" id="content"></div>
   <div class="tabbar">
-    <button class="tab-btn active" id="tab-inv" onclick="switchTab(&#39;inventory&#39;,this)">
+    <button class="tab-btn active" id="tab-inv" onclick="switchTab('inventory',this)">
       <span class="tab-icon">📦</span>Inventory
     </button>
-    <button class="tab-btn" id="tab-ana" onclick="switchTab(&#39;analytics&#39;,this)">
+    <button class="tab-btn" id="tab-ana" onclick="switchTab('analytics',this)">
       <span class="tab-icon">📊</span>Analytics
     </button>
   </div>
@@ -222,7 +244,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
     <div class="sheet-handle"></div>
     <div class="sheet-title">
       <span id="add-title">Add Item</span>
-      <button class="close-btn" onclick="closeSheet(&#39;add-sheet&#39;)">✕</button>
+      <button class="close-btn" onclick="closeSheet('add-sheet')">✕</button>
     </div>
     <div class="form-group">
       <label>Item Name *</label>
@@ -263,7 +285,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
       </div>
     </div>
     <button class="btn-primary" onclick="saveItem()" id="save-btn">Add Item</button>
-    <button class="btn-secondary" onclick="closeSheet(&#39;add-sheet&#39;)">Cancel</button>
+    <button class="btn-secondary" onclick="closeSheet('add-sheet')">Cancel</button>
   </div>
 </div>
 
@@ -278,7 +300,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
     <div class="sheet-handle"></div>
     <div class="sheet-title">
       <span>Mark as Sold</span>
-      <button class="close-btn" onclick="closeSheet(&#39;sell-sheet&#39;)">✕</button>
+      <button class="close-btn" onclick="closeSheet('sell-sheet')">✕</button>
     </div>
     <div class="form-group">
       <label>Sale Price ($) *</label>
@@ -294,13 +316,13 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
       <div class="sell-row"><span>Net Profit</span><span id="sp-profit" style="font-family:var(--mono)">—</span></div>
     </div>
     <button class="btn-primary" onclick="confirmSell()">Confirm Sale ✓</button>
-    <button class="btn-secondary" onclick="closeSheet(&#39;sell-sheet&#39;)">Cancel</button>
+    <button class="btn-secondary" onclick="closeSheet('sell-sheet')">Cancel</button>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<script src="./FlipTrack_files/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 // ── SUPABASE CONFIG ──
 const SUPA_URL = "https://yjhlfhivlxczntpjanxx.supabase.co";
@@ -314,8 +336,11 @@ async function sbFetch(path, opts={}) {
     headers: {...HEADERS, ...(opts.headers||{})}
   });
   if (!res.ok) {
-    const err = await res.json().catch(()=>({}));
-    throw new Error(err.message || err.error_description || "Request failed");
+    const body = await res.text();
+    let err = {};
+    try { err = JSON.parse(body); } catch(e) {}
+    const msg = err.msg || err.message || err.error_description || err.error || body || ("HTTP "+res.status);
+    throw new Error(msg);
   }
   const text = await res.text();
   return text ? JSON.parse(text) : null;
@@ -330,6 +355,16 @@ async function signIn(email, password) {
 }
 async function signOutApi(token) {
   return fetch(SUPA_URL+"/auth/v1/logout", {method:"POST", headers:{...HEADERS,"Authorization":"Bearer "+token}});
+}
+async function resetPassword(email) {
+  return sbFetch("/auth/v1/recover", {method:"POST", body:JSON.stringify({email})});
+}
+async function updatePassword(newPassword, token) {
+  return sbFetch("/auth/v1/user", {
+    method:"PUT",
+    headers:{"Authorization":"Bearer "+token},
+    body:JSON.stringify({password: newPassword})
+  });
 }
 
 // Items CRUD
@@ -436,6 +471,82 @@ function toggleAuthMode() {
   document.querySelector(".auth-switch button").textContent = authMode==="signin"?"Sign up":"Sign in";
   document.getElementById("auth-err").textContent="";
   document.getElementById("auth-msg").textContent="";
+  // show forgot password link only on sign in
+  document.getElementById("forgot-row").style.display = authMode==="signin"?"":"none";
+}
+function toggleForgot() {
+  const email = document.getElementById("auth-email").value.trim();
+  const errEl = document.getElementById("auth-err");
+  const msgEl = document.getElementById("auth-msg");
+  errEl.textContent=""; msgEl.textContent="";
+  if(!email){ errEl.textContent="Enter your email above first."; return; }
+  if(!confirm("Send a password reset link to "+email+"?")) return;
+  sendReset(email);
+}
+async function sendReset(email) {
+  const errEl = document.getElementById("auth-err");
+  const msgEl = document.getElementById("auth-msg");
+  const btn = document.getElementById("auth-submit");
+  btn.disabled=true;
+  try {
+    await resetPassword(email);
+    msgEl.textContent="✓ Reset link sent! Check your email.";
+  } catch(e) {
+    errEl.textContent = e.message || "Could not send reset email.";
+  }
+  btn.disabled=false;
+}
+
+// Parse hash params from URL (used for password reset redirect)
+function parseHash() {
+  const hash = window.location.hash.substring(1);
+  const params = {};
+  hash.split("&").forEach(p => { const [k,v]=p.split("="); if(k) params[k]=decodeURIComponent(v||""); });
+  return params;
+}
+
+let resetToken = null;
+function checkForResetToken() {
+  const params = parseHash();
+  if(params.type === "recovery" && params.access_token) {
+    resetToken = params.access_token;
+    // Clear the token from URL bar without reloading
+    history.replaceState(null, "", window.location.pathname);
+    // Show reset card, hide login card
+    document.getElementById("login-card").style.display="none";
+    document.getElementById("reset-card").style.display="";
+    document.getElementById("auth-screen").style.display="flex";
+    document.getElementById("app").style.display="none";
+    return true;
+  }
+  return false;
+}
+
+async function submitNewPassword() {
+  const pw = document.getElementById("reset-pw").value;
+  const pw2 = document.getElementById("reset-pw2").value;
+  const errEl = document.getElementById("reset-err");
+  const msgEl = document.getElementById("reset-msg");
+  const btn = document.getElementById("reset-submit");
+  errEl.textContent=""; msgEl.textContent="";
+  if(!pw || pw.length < 6){ errEl.textContent="Password must be at least 6 characters."; return; }
+  if(pw !== pw2){ errEl.textContent="Passwords don't match."; return; }
+  btn.disabled=true; btn.textContent="Saving…";
+  try {
+    await updatePassword(pw, resetToken);
+    msgEl.textContent="✓ Password updated! Signing you in…";
+    // Sign in with new password — user needs to sign in fresh
+    setTimeout(()=>{
+      resetToken=null;
+      document.getElementById("reset-card").style.display="none";
+      document.getElementById("login-card").style.display="";
+      document.getElementById("reset-msg").textContent="";
+      document.getElementById("auth-msg").textContent="✓ Password updated! Please sign in.";
+    }, 1500);
+  } catch(e) {
+    errEl.textContent = e.message || "Could not update password. The reset link may have expired.";
+  }
+  btn.disabled=false; btn.textContent="Set new password";
 }
 async function authSubmit() {
   const email=document.getElementById("auth-email").value.trim();
@@ -445,28 +556,30 @@ async function authSubmit() {
   const btn=document.getElementById("auth-submit");
   errEl.textContent=""; msgEl.textContent="";
   if(!email||!pw){errEl.textContent="Email and password are required.";return;}
+  if(pw.length < 6){errEl.textContent="Password must be at least 6 characters.";return;}
   btn.disabled=true; btn.textContent="Please wait…";
   try {
     if(authMode==="signup"){
       const res = await signUp(email,pw);
-      if(res.user && !res.session){
+      // Supabase may require email confirmation or sign in immediately
+      if(res && res.access_token){
+        saveSession(res); await loadItems(); showApp(); render();
+      } else if(res && res.user){
         msgEl.textContent="✓ Check your email to confirm your account, then sign in.";
         toggleAuthMode();
-      } else if(res.access_token){
-        saveSession(res); await loadItems(); showApp(); render();
       } else {
-        errEl.textContent = res.error_description || "Sign up failed.";
+        errEl.textContent = (res && (res.error_description || res.msg || res.message)) || "Sign up failed. Try a stronger password (min 6 chars).";
       }
     } else {
       const res = await signIn(email,pw);
-      if(res.access_token){
+      if(res && res.access_token){
         saveSession(res); await loadItems(); showApp(); render();
       } else {
-        errEl.textContent = res.error_description || "Invalid email or password.";
+        errEl.textContent = (res && (res.error_description || res.msg || res.message)) || "Invalid email or password.";
       }
     }
   } catch(e) {
-    errEl.textContent = e.message || "Something went wrong.";
+    errEl.textContent = e.message || "Something went wrong. Check your internet connection.";
   }
   btn.disabled=false;
   btn.textContent = authMode==="signin"?"Sign in":"Create account";
@@ -719,9 +832,16 @@ function clearPhoto(){photoData="";document.getElementById("photo-preview").styl
 if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(()=>{});
 
 // ── INIT ──
-if(session){loadItems().then(()=>{showApp();render();});}
-else{showAuth();}
+// Check if this is a password reset redirect first
+if(!checkForResetToken()) {
+  // Validate session has required fields before trusting it
+  if(session && session.access_token && session.user && session.user.id){
+    loadItems().then(()=>{ showApp(); render(); });
+  } else {
+    clearSession();
+    showAuth();
+  }
+}
 </script>
-
-
-</body></html>
+</body>
+</html>
